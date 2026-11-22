@@ -1,0 +1,27 @@
+# Dependencias y build (se regeneran con npm install / npm run build)
+node_modules/
+.next/
+out/
+
+# Datos y backups (NUNCA subir: aquí van tus presupuestos reales)
+db/
+*.db
+*.db.bak*
+!db/.gitkeep
+
+# Secretos
+.env
+.env.*
+
+# Entornos y artefactos del agente/sandbox
+download/
+upload/
+tool-results/
+examples/
+mini-services/
+reverse_analysis/
+tests/
+tmp/
+*.log
+__pycache__/
+.DS_Store
