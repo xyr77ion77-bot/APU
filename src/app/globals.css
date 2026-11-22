@@ -1,0 +1,595 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ============================================================
+   CIV · Diseño de interfaz (sidebar navy + topbar + tabla + drawer)
+   Portado desde upload/interfaz_civ_a.html
+   ============================================================ */
+
+.civ-app {
+  color-scheme: light;
+  --navy: #172b45;
+  --navy2: #203953;
+  --blue: #1769e0;
+  --blue-hover: #0f57c4;
+  --ink: #1e2938;
+  --civ-muted: #718096;
+  --line: #e5eaf0;
+  --soft: #f5f7fa;
+  --green: #18836b;
+  --shadow: 0 18px 48px rgba(19, 39, 65, .18);
+}
+
+.civ-app {
+  background: #f5f7fa;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.civ-app button { cursor: pointer; }
+.civ-app button, .civ-app input { font: inherit; }
+
+/* ---------- Layout ---------- */
+.civ-app .app { height: 100vh; min-height: 580px; display: flex; overflow: hidden; }
+.civ-app .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.civ-app .content { padding: 23px 26px 28px; overflow: auto; flex: 1; }
+
+/* ---------- Sidebar ---------- */
+.civ-app .sidebar {
+  width: 224px; background: var(--navy); color: #c7d2df;
+  display: flex; flex-direction: column; padding: 18px 12px 13px; flex: none;
+}
+.civ-app .brand { height: 44px; display: flex; align-items: center; gap: 11px; padding: 0 9px 14px; color: #fff; border-bottom: 1px solid #30425a; }
+.civ-app .brand-symbol { width: 29px; height: 29px; background: #2069d6; border-radius: 7px; display: grid; place-items: center; color: white; flex: none; }
+.civ-app .brand-name { font-weight: 750; letter-spacing: .01em; font-size: 14px; }
+.civ-app .brand-sub { font-size: 9px; color: #92a4b8; letter-spacing: .14em; margin-top: 3px; }
+.civ-app .workspace {
+  margin: 14px 2px 15px; background: #203751; border: 1px solid #334b67; border-radius: 7px;
+  padding: 9px 10px; display: flex; align-items: center; gap: 9px;
+}
+.civ-app .workspace-mark { width: 24px; height: 24px; background: #34506e; border-radius: 5px; display: grid; place-items: center; color: #dbe7f4; font-size: 10px; font-weight: 700; flex: none; }
+.civ-app .workspace-text { min-width: 0; flex: 1; }
+.civ-app .workspace-text strong { display: block; color: #e8eef6; font-size: 10px; }
+.civ-app .workspace-text small { display: block; color: #92a4b8; font-size: 9px; margin-top: 3px; }
+.civ-app .nav-label { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8396ac; padding: 8px 10px 6px; }
+.civ-app .nav { display: grid; gap: 3px; }
+.civ-app .nav-item {
+  width: 100%; border: 0; border-radius: 6px; background: transparent; color: #bcc9d8;
+  display: flex; align-items: center; gap: 11px; padding: 9px 10px; text-align: left; font-size: 11px; font-weight: 550;
+}
+.civ-app .nav-item:hover { background: #213a56; color: white; }
+.civ-app .nav-item.active { background: #2a4360; color: white; box-shadow: inset 2px 0 #62a0ff; }
+.civ-app .nav-item.active .nav-ic { color: #88b7ff; }
+.civ-app .nav-item .count { margin-left: auto; background: #304a67; color: #c9d8e8; border-radius: 10px; padding: 2px 7px; font-size: 9px; }
+.civ-app .side-spacer { flex: 1; }
+.civ-app .side-stats { border-top: 1px solid #30425a; padding: 13px 10px 3px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.civ-app .stat-label { font-size: 9px; color: #90a1b5; }
+.civ-app .stat-value { font: 600 12px ui-monospace, SFMono-Regular, Consolas, monospace; color: #f1f5fa; margin-top: 4px; }
+.civ-app .profile { display: flex; align-items: center; gap: 9px; padding: 12px 7px 0; margin-top: 12px; border-top: 1px solid #30425a; }
+.civ-app .avatar { height: 27px; width: 27px; border-radius: 50%; background: #d8e4f2; color: #254260; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none; }
+.civ-app .profile strong { font-size: 10px; color: #e7edf5; display: block; }
+.civ-app .profile small { display: block; color: #91a2b5; font-size: 9px; margin-top: 3px; }
+
+/* ---------- Topbar ---------- */
+.civ-app .topbar {
+  height: 57px; flex: none; background: #fff; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 25px;
+}
+.civ-app .breadcrumbs { font-size: 11px; color: #7b8796; }
+.civ-app .breadcrumbs strong { color: #28394d; font-weight: 650; }
+.civ-app .crumbsep { margin: 0 8px; color: #b3bdc8; }
+.civ-app .top-actions { display: flex; gap: 9px; align-items: center; }
+.civ-app .top-select, .civ-app .square-btn {
+  height: 31px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: #536276;
+  display: inline-flex; align-items: center; gap: 7px; padding: 0 9px; font-size: 10px;
+}
+.civ-app .square-btn { width: 31px; justify-content: center; padding: 0; }
+.civ-app .top-select:hover, .civ-app .square-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.civ-app .top-user { display: flex; align-items: center; gap: 7px; margin-left: 3px; color: #536276; font-size: 10px; }
+.civ-app .top-user .avatar { height: 25px; width: 25px; }
+
+/* ---------- Page head / summary ---------- */
+.civ-app .page-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 17px; gap: 12px; }
+.civ-app .page-head h1 { margin: 0; font-size: 21px; letter-spacing: -.035em; font-weight: 700; color: #1c2939; }
+.civ-app .page-head p { margin: 6px 0 0; color: #788597; font-size: 11px; }
+.civ-app .head-tools { display: flex; gap: 8px; align-items: center; }
+.civ-app .btn {
+  border: 1px solid transparent; background: var(--blue); color: #fff; height: 32px; padding: 0 11px;
+  border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-weight: 650; font-size: 10px; white-space: nowrap;
+}
+.civ-app .btn:hover { background: var(--blue-hover); }
+.civ-app .btn:disabled { opacity: .55; cursor: default; }
+.civ-app .btn.outline { background: #fff; border-color: #dce3eb; color: #44546a; }
+.civ-app .btn.outline:hover { background: #f7f9fb; }
+.civ-app .btn.subtle { background: #f0f4f9; color: #344861; }
+.civ-app .btn.danger { background: #dc2626; }
+.civ-app .btn.danger:hover { background: #b91c1c; }
+.civ-app .btn.small { height: 29px; padding: 0 9px; }
+.civ-app .summary-strip { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.civ-app .summary-pill {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8ef; background: #fff;
+  border-radius: 5px; padding: 6px 9px; color: #536176; font-size: 9px;
+}
+.civ-app .summary-pill strong { color: #26384d; font-weight: 700; }
+.civ-app .summary-pill .dot { height: 6px; width: 6px; border-radius: 50%; background: #22836f; }
+.civ-app .summary-spacer { flex: 1; }
+.civ-app .last-update { font-size: 9px; color: #8995a4; }
+
+/* ---------- Toolbar ---------- */
+.civ-app .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.civ-app .searchbox {
+  height: 35px; flex: 1; max-width: 470px; display: flex; align-items: center; gap: 8px;
+  border: 1px solid #dce3eb; background: #fff; border-radius: 5px; padding: 0 10px; color: #8693a2;
+}
+.civ-app .searchbox:focus-within { border-color: #83aee9; box-shadow: 0 0 0 3px #1769e016; }
+.civ-app .searchbox input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; font-size: 10px; color: #27384d; }
+.civ-app .searchbox input::placeholder { color: #9aa5b3; }
+.civ-app .searchbox .tiny { font-size: 9px; color: #b6c0cc; border: 1px solid #e4e9ef; border-radius: 4px; padding: 2px 5px; white-space: nowrap; }
+.civ-app .filter-button {
+  height: 35px; border: 1px solid #dce3eb; background: white; border-radius: 5px; padding: 0 10px;
+  display: flex; align-items: center; gap: 7px; color: #536176; font-size: 10px;
+}
+.civ-app .filter-button:hover { border-color: #aebdcc; }
+.civ-app .filter-count { margin-left: 3px; border-radius: 8px; background: #edf3fb; padding: 2px 5px; color: #3d68a0; font-size: 9px; }
+.civ-app .view-tools { margin-left: auto; display: flex; gap: 6px; }
+.civ-app .view-btn { width: 33px; height: 33px; border: 1px solid #dce3eb; background: white; border-radius: 5px; color: #8491a0; display: grid; place-items: center; }
+.civ-app .view-btn.selected { color: #315d95; background: #f0f5fc; border-color: #c7d8ef; }
+
+/* Dropdown de guías / filtros */
+.civ-app .dd-wrap { position: relative; }
+.civ-app .dd-panel {
+  position: absolute; top: 39px; left: 0; min-width: 230px; background: #fff; border: 1px solid #e1e6ed;
+  border-radius: 7px; box-shadow: 0 10px 30px rgba(19,39,65,.13); z-index: 30; max-height: 300px; overflow: auto; padding: 5px;
+}
+.civ-app .dd-item {
+  width: 100%; border: 0; background: transparent; border-radius: 5px; padding: 8px 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 10px; color: #3c4c60; text-align: left;
+}
+.civ-app .dd-item:hover { background: #f3f7fc; }
+.civ-app .dd-item.selected { color: #205da9; font-weight: 700; background: #eef4fc; }
+.civ-app .dd-item .n { color: #8a96a4; font-size: 9px; font-family: ui-monospace, monospace; }
+
+/* ---------- Tabla ---------- */
+.civ-app .table-frame { background: white; border: 1px solid #e1e6ed; border-radius: 7px; overflow: hidden; }
+.civ-app .table-scroll { overflow: auto; }
+.civ-app .data-table { border-collapse: collapse; width: 100%; min-width: 790px; }
+.civ-app .data-table th {
+  text-align: left; background: #f8fafc; color: #7a8796; border-bottom: 1px solid #e7ebf0;
+  font-size: 8px; letter-spacing: .055em; font-weight: 700; padding: 10px 11px; white-space: nowrap;
+}
+.civ-app .data-table td { padding: 11px; border-bottom: 1px solid #edf0f4; color: #526174; font-size: 10px; vertical-align: middle; }
+.civ-app .data-table tbody tr { cursor: pointer; transition: background .12s; }
+.civ-app .data-table tbody tr:last-child td { border-bottom: 0; }
+.civ-app .data-table tbody tr:hover { background: #f8fbff; }
+.civ-app .data-table tbody tr.current { background: #f3f7fd; }
+.civ-app .code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; color: #2462ad; font-weight: 650; white-space: nowrap; }
+.civ-app .desc { color: #26384b; font-size: 10px; font-weight: 650; max-width: 430px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.civ-app .guide-line { color: #99a4b1; font-size: 9px; margin-top: 4px; }
+.civ-app .unit-tag { display: inline-flex; min-width: 31px; justify-content: center; padding: 4px 6px; background: #f1f4f7; color: #58677a; border-radius: 4px; font-size: 9px; }
+.civ-app .num { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; color: #526174; white-space: nowrap; }
+.civ-app .price { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; font-weight: 600; color: #27384c; white-space: nowrap; }
+.civ-app .price.strong { color: #12694f; font-weight: 700; }
+.civ-app .row-actions { display: flex; justify-content: flex-end; gap: 5px; }
+.civ-app .row-icon {
+  height: 26px; width: 27px; border: 1px solid transparent; border-radius: 4px; background: transparent;
+  color: #8a97a5; display: grid; place-items: center;
+}
+.civ-app .row-icon:hover { background: #edf4ff; border-color: #d7e6fa; color: #2462ad; }
+.civ-app .row-icon.danger:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+.civ-app .table-foot {
+  height: 41px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid #e7ebf0; color: #8995a3; font-size: 9px; background: #fff;
+}
+.civ-app .pagination { display: flex; align-items: center; gap: 7px; }
+.civ-app .page-btn { width: 22px; height: 22px; border: 1px solid #e0e6ed; border-radius: 4px; background: white; color: #637287; display: grid; place-items: center; }
+.civ-app .page-btn:disabled { opacity: .45; cursor: default; }
+.civ-app .page-info { font-family: ui-monospace, monospace; color: #657386; }
+.civ-app .empty { padding: 36px; text-align: center; color: #7e8a99; font-size: 11px; }
+.civ-app .skel { height: 12px; border-radius: 4px; background: linear-gradient(90deg, #eef1f5 25%, #f7f9fb 50%, #eef1f5 75%); background-size: 200% 100%; animation: civ-skel 1.2s infinite; }
+@keyframes civ-skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Inputs dentro de tablas / formularios */
+.civ-app .input-num {
+  width: 76px; height: 26px; border: 1px solid #dce3eb; border-radius: 4px; padding: 0 6px;
+  font-family: ui-monospace, monospace; font-size: 10px; color: #27384d; text-align: right; background: #fff;
+}
+.civ-app .input-num:focus { outline: 0; border-color: #83aee9; box-shadow: 0 0 0 3px #1769e016; }
+.civ-app .field-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #7d8a99; margin-bottom: 5px; }
+.civ-app .field-input {
+  width: 100%; height: 32px; border: 1px solid #dce3eb; border-radius: 5px; padding: 0 9px;
+  font-size: 11px; color: #27384d; background: #fff;
+}
+.civ-app .field-input:focus { outline: 0; border-color: #83aee9; box-shadow: 0 0 0 3px #1769e016; }
+
+/* Tarjeta de formulario (estilo table-frame para inputs) */
+.civ-app .panel-card { background: #fff; border: 1px solid #e1e6ed; border-radius: 7px; padding: 16px 18px; }
+.civ-app .panel-title { font-size: 9px; font-weight: 700; letter-spacing: .07em; color: #536276; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.civ-app .panel-title span { color: #8a96a4; font-weight: 500; letter-spacing: 0; text-transform: none; }
+
+/* ---------- Drawer APU ---------- */
+.civ-app .overlay { position: fixed; inset: 0; background: rgba(15, 30, 48, .22); opacity: 0; visibility: hidden; transition: opacity .2s; z-index: 40; }
+.civ-app .overlay.show { opacity: 1; visibility: visible; }
+.civ-app .drawer {
+  position: fixed; right: 0; top: 0; bottom: 0; width: min(520px, 94vw); background: #fff; z-index: 50;
+  box-shadow: var(--shadow); display: flex; flex-direction: column; transform: translateX(102%); transition: transform .24s ease;
+}
+.civ-app .drawer.open { transform: translateX(0); }
+.civ-app .drawer-head { padding: 19px 21px 15px; border-bottom: 1px solid #e8edf2; position: relative; }
+.civ-app .drawer-head-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.civ-app .eyebrow { font-size: 9px; color: #788699; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.civ-app .close-btn { width: 28px; height: 28px; border: 1px solid #e2e7ed; border-radius: 5px; background: #fff; color: #697789; display: grid; place-items: center; }
+.civ-app .close-btn:hover { background: #f4f7fa; }
+.civ-app .drawer-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; color: #2160ad; font-size: 11px; font-weight: 650; }
+.civ-app .status-badge {
+  display: inline-flex; align-items: center; gap: 5px; background: #eef7f4; color: #377863;
+  padding: 4px 7px; border-radius: 4px; font-size: 8px; font-weight: 650; margin-left: 7px;
+}
+.civ-app .status-badge:before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #27866d; }
+.civ-app .drawer-head h2 { font-size: 15px; line-height: 1.5; margin: 8px 30px 9px 0; letter-spacing: -.02em; color: #1c2939; font-weight: 700; }
+.civ-app .drawer-meta { display: flex; gap: 7px; flex-wrap: wrap; }
+.civ-app .meta-chip { font-size: 9px; color: #647286; background: #f2f5f8; border-radius: 4px; padding: 5px 7px; }
+.civ-app .drawer-tabs { height: 41px; border-bottom: 1px solid #e9edf2; display: flex; padding: 0 20px; gap: 19px; flex: none; }
+.civ-app .drawer-tab { border: 0; background: transparent; color: #768396; font-size: 10px; padding: 0 1px; position: relative; }
+.civ-app .drawer-tab.active { color: #205da9; font-weight: 700; }
+.civ-app .drawer-tab.active:after { content: ""; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: #1769e0; border-radius: 2px; }
+.civ-app .drawer-scroll { overflow: auto; flex: 1; padding: 17px 21px 21px; }
+.civ-app .section-title { display: flex; align-items: center; justify-content: space-between; margin: 2px 0 7px; }
+.civ-app .section-title strong { font-size: 9px; color: #536276; letter-spacing: .07em; text-transform: uppercase; }
+.civ-app .section-title span { font-size: 9px; color: #8a96a4; }
+.civ-app .apu-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+.civ-app .apu-table th { text-align: left; font-size: 8px; color: #8994a1; font-weight: 650; padding: 6px 5px; border-bottom: 1px solid #e8edf2; white-space: nowrap; }
+.civ-app .apu-table td { padding: 8px 5px; border-bottom: 1px solid #f0f2f5; font-size: 9px; color: #526174; }
+.civ-app .apu-table td:last-child, .civ-app .apu-table th:last-child { text-align: right; }
+.civ-app .apu-table .mono { font-family: ui-monospace, monospace; white-space: nowrap; }
+.civ-app .apu-table .item-name { color: #35465a; font-weight: 550; }
+.civ-app .apu-table .item-note { color: #99a4b1; font-size: 8px; margin-top: 3px; }
+.civ-app .calc-card { border: 1px solid #e5eaf0; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+.civ-app .calc-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px; border-bottom: 1px solid #edf0f3; font-size: 9px; color: #5b697b; }
+.civ-app .calc-row:last-child { border-bottom: 0; }
+.civ-app .calc-row.total { background: #f6f9fd; color: #27394e; font-weight: 700; }
+.civ-app .calc-row.emph { color: #27394e; font-weight: 650; }
+.civ-app .calc-row .mono { font-family: ui-monospace, monospace; font-size: 10px; }
+.civ-app .calc-row.total .mono { font-size: 12px; color: #12694f; }
+.civ-app .calc-note { display: flex; gap: 7px; align-items: flex-start; color: #8793a1; font-size: 9px; line-height: 1.55; margin: 12px 0; }
+.civ-app .drawer-foot { padding: 12px 19px; border-top: 1px solid #e6ebf0; display: flex; gap: 8px; background: #fff; }
+.civ-app .drawer-foot .btn { height: 36px; }
+.civ-app .drawer-foot .btn:first-child { flex: 1; }
+.civ-app .drawer-foot .btn:last-child { flex: 1.5; }
+
+/* ---------- Toast ---------- */
+.civ-app .toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 14px); opacity: 0; pointer-events: none;
+  background: #172b45; color: white; padding: 10px 14px; border-radius: 6px; font-size: 10px;
+  box-shadow: 0 8px 20px #12253b33; z-index: 90; transition: .2s; max-width: min(480px, 90vw);
+}
+.civ-app .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .civ-app .sidebar { width: 190px; }
+  .civ-app .content { padding: 20px 17px; }
+  .civ-app .topbar { padding: 0 17px; }
+  .civ-app .last-update { display: none; }
+  .civ-app .hide-mid { display: none; }
+}
+@media (max-width: 650px) {
+  .civ-app .app { min-height: 500px; }
+  .civ-app .sidebar { width: 58px; padding: 15px 5px; }
+  .civ-app .brand { justify-content: center; padding: 0 0 14px; }
+  .civ-app .brand-copy, .civ-app .workspace, .civ-app .nav-label, .civ-app .nav-item .label,
+  .civ-app .nav-item .count, .civ-app .side-stats, .civ-app .profile .profile-copy { display: none; }
+  .civ-app .nav-item { justify-content: center; padding: 10px 4px; }
+  .civ-app .profile { justify-content: center; padding: 11px 0 0; }
+  .civ-app .topbar { height: 49px; padding: 0 11px; }
+  .civ-app .top-select { max-width: 125px; overflow: hidden; }
+  .civ-app .top-user .user-name { display: none; }
+  .civ-app .content { padding: 16px 10px; }
+  .civ-app .page-head { align-items: flex-start; flex-direction: column; }
+  .civ-app .head-tools { width: 100%; justify-content: flex-end; }
+  .civ-app .summary-strip { flex-wrap: wrap; }
+  .civ-app .summary-spacer { display: none; }
+  .civ-app .toolbar { flex-wrap: wrap; }
+  .civ-app .searchbox { max-width: none; flex-basis: 100%; }
+  .civ-app .view-tools { display: none; }
+  .civ-app .filter-button { height: 31px; }
+  .civ-app .drawer-head { padding: 15px 15px 12px; }
+  .civ-app .drawer-tabs { padding: 0 15px; }
+  .civ-app .drawer-scroll { padding: 15px; }
+  .civ-app .drawer-foot { padding: 10px; }
+  .civ-app .desc { max-width: 250px; }
+}
+
+/* ============================================================
+   Editor de partidas personalizadas (S/C) — modal central
+   ============================================================ */
+.civ-app .sc-dialog {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(720px, calc(100vw - 24px)); max-height: min(86vh, 780px);
+  background: #fff; border-radius: 14px; box-shadow: 0 18px 50px rgba(15, 30, 48, .28);
+  display: flex; flex-direction: column; z-index: 50; overflow: hidden;
+}
+.civ-app .sc-dialog-body { overflow: auto; flex: 1; padding: 16px 20px; }
+.civ-app .sc-row-add { display: flex; gap: 6px; align-items: center; margin: 8px 0 2px; flex-wrap: wrap; }
+.civ-app .sc-row-add .field-input { flex: 1 1 150px; min-width: 90px; height: 31px; font-size: 11px; }
+.civ-app .sc-live { background: #f7f9fb; border: 1px solid #e6ebf0; border-radius: 10px; padding: 4px 14px; }
+.civ-app .sc-live .calc-row { padding: 6px 0; }
+@media (max-width: 640px) {
+  /* Diálogo central a pantalla completa en móvil (mejor uso del área y del teclado) */
+  .civ-app .sc-dialog, .civ-app .sc-dialog-wide { inset: 0; top: 0; left: 0; width: 100vw; max-width: none; max-height: 100dvh; border-radius: 0; transform: none; }
+  .civ-app .sc-dialog-body { padding: 14px 12px; }
+}
+/* Diálogo ancho (valuaciones) — en móvil la media 640 lo vuelve full-screen */
+.civ-app .sc-dialog-wide { width: min(900px, calc(100vw - 24px)); }
+.civ-app .sc-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff2cc; color: #7a5b00; font-size: 8px; font-weight: 800;
+  border-radius: 4px; padding: 1.5px 5px; letter-spacing: .04em; flex: none;
+}
+.civ-app .seccion-chip {
+  display: inline-flex; align-items: center; max-width: 120px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; flex: none;
+  background: #e8f0fb; color: #205da9; font-size: 8px; font-weight: 700;
+  border-radius: 4px; padding: 1.5px 6px; letter-spacing: .03em;
+}
+
+/* ============================================================
+   Diseño móvil (teléfonos ≤480px) — toque, legibilidad y
+   tablas navegables con scroll horizontal y columna fija.
+   En tablet/≤650px el sidebar ya colapsa a iconos.
+   ============================================================ */
+@media (max-width: 480px) {
+  /* Layout y superficies */
+  .civ-app .content { padding: 13px 11px 22px; }
+  .civ-app .page-head { margin-bottom: 13px; }
+  .civ-app .page-head h1 { font-size: 18px; letter-spacing: -.03em; }
+  .civ-app .page-head p { font-size: 11px; }
+  .civ-app .panel-card { padding: 13px 13px 14px; border-radius: 8px; }
+
+  /* Topbar: la ruta nunca desborda; acciones compactas */
+  .civ-app .topbar { padding: 0 10px; gap: 8px; }
+  .civ-app .breadcrumbs { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .civ-app .top-actions { flex: none; }
+  .civ-app .top-select { max-width: 128px; overflow: hidden; white-space: nowrap; }
+  .civ-app .square-btn { width: 34px; height: 34px; }
+
+  /* Objetivos de toque (≥36px) y texto legible */
+  .civ-app .btn { height: 38px; padding: 0 13px; font-size: 11.5px; }
+  .civ-app .btn.small { height: 34px; padding: 0 11px; font-size: 10.5px; }
+  .civ-app .filter-button { height: 38px; font-size: 11px; }
+  .civ-app .view-btn { width: 38px; height: 38px; }
+  .civ-app .close-btn { width: 34px; height: 34px; }
+  .civ-app .row-icon { height: 32px; width: 32px; }
+  .civ-app .page-btn { width: 30px; height: 30px; }
+
+  /* Formularios: 16px en inputs de texto evita el zoom automático de iOS */
+  .civ-app .field-input { height: 38px; font-size: 16px; }
+  .civ-app .searchbox { height: 40px; }
+  .civ-app .searchbox input { font-size: 16px; }
+  .civ-app .input-num { width: 88px; height: 34px; font-size: 16px; }
+  .civ-app select.input, .civ-app .input { font-size: 16px; }
+  .civ-app .input-num:focus, .civ-app .field-input:focus, .civ-app .searchbox:focus-within { border-color: #83aee9; }
+
+  /* Pills y etiquetas legibles */
+  .civ-app .summary-pill { font-size: 11px; padding: 8px 10px; border-radius: 6px; }
+  .civ-app .summary-pill strong { font-size: 11px; }
+  .civ-app .table-foot { font-size: 10px; height: 44px; padding: 0 10px; flex-wrap: wrap; }
+  .civ-app .empty { font-size: 12px; padding: 28px 14px; }
+  .civ-app .desc { max-width: 210px; }
+  .civ-app .guide-line { font-size: 10px; }
+
+  /* Tablas: scroll suave + primera columna fija (contexto siempre visible) */
+  .civ-app .table-scroll { -webkit-overflow-scrolling: touch; }
+  .civ-app .table-scroll::-webkit-scrollbar { height: 6px; }
+  .civ-app .table-scroll::-webkit-scrollbar-thumb { background: #cdd6df; border-radius: 3px; }
+  .civ-app .data-table th { font-size: 8.5px; padding: 9px 9px; }
+  .civ-app .data-table td { font-size: 11px; padding: 10px 9px; }
+  .civ-app .data-table .code, .civ-app .data-table .num, .civ-app .data-table .price { font-size: 11px; }
+  .civ-app .data-table th:first-child, .civ-app .data-table td:first-child {
+    position: sticky; left: 0; z-index: 1;
+    background: #fff; border-right: 1px solid #e7ebf0;
+    background-clip: padding-box;
+  }
+  .civ-app .data-table th:first-child { background: #f8fafc; z-index: 2; }
+  .civ-app .data-table tbody tr:hover td:first-child { background: #f8fbff; }
+  .civ-app .data-table tbody tr.current td:first-child { background: #f3f7fd; }
+  .civ-app .apu-table th { font-size: 8.5px; }
+  .civ-app .apu-table td { font-size: 10.5px; padding: 9px 6px; }
+  .civ-app .apu-table th:first-child, .civ-app .apu-table td:first-child {
+    position: sticky; left: 0; z-index: 1; background: #fff;
+    border-right: 1px solid #f0f2f5; background-clip: padding-box;
+  }
+  .civ-app .apu-table th:first-child { background: #fff; z-index: 2; }
+
+  /* Dropdowns nunca más anchos que la pantalla */
+  .civ-app .dd-panel { max-width: calc(100vw - 24px); }
+
+  /* Drawer y diálogos: aprovechan toda la pantalla */
+  .civ-app .drawer { width: 100vw; }
+  .civ-app .drawer-head h2 { font-size: 14px; margin-right: 8px; }
+  .civ-app .drawer-foot .btn { height: 42px; font-size: 12px; }
+  .civ-app .sc-row-add .field-input { flex-basis: 100%; }
+  .civ-app .toast { bottom: 14px; font-size: 11px; max-width: calc(100vw - 20px); }
+
+  /* Botones flotantes de la zona inferior no tapan el pie de tabla */
+  .civ-app .summary-strip { gap: 7px; margin-bottom: 12px; }
+}
+
+/* Teléfonos muy estrechos (≤360px): última Escalera de compresión */
+@media (max-width: 360px) {
+  .civ-app .page-head h1 { font-size: 16.5px; }
+  .civ-app .desc { max-width: 170px; }
+  .civ-app .top-select { max-width: 96px; }
+  .civ-app .btn { padding: 0 10px; }
+}
+
+/* ============================================================
+   Editor de APU — modo edición del drawer (editar/añadir/eliminar
+   conceptos) y diálogo de destino del guardado
+   ============================================================ */
+.civ-app .apu-edit-wrap { overflow: auto; -webkit-overflow-scrolling: touch; margin-bottom: 14px; }
+.civ-app .apu-edit-table { width: 100%; border-collapse: collapse; min-width: 500px; }
+.civ-app .apu-edit-table th { text-align: left; font-size: 8px; color: #8994a1; font-weight: 650; padding: 6px 5px; border-bottom: 1px solid #e8edf2; white-space: nowrap; }
+.civ-app .apu-edit-table td { padding: 4px 3px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
+.civ-app .apu-edit-table tr:hover td { background: #fafcfe; }
+.civ-app .apu-edit-input {
+  width: 100%; height: 28px; border: 1px solid #dce3eb; border-radius: 4px; padding: 0 7px;
+  font-size: 10px; color: #27384d; background: #fff;
+}
+.civ-app .apu-edit-input.num { text-align: right; font-family: ui-monospace, monospace; }
+.civ-app .apu-edit-input:focus { outline: 0; border-color: #83aee9; box-shadow: 0 0 0 3px #1769e016; }
+.civ-app .row-del {
+  height: 26px; width: 26px; border: 1px solid transparent; border-radius: 4px; background: transparent;
+  color: #b0646a; display: grid; place-items: center; flex: none;
+}
+.civ-app .row-del:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+.civ-app .param-edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 9px; }
+.civ-app .param-edit-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 8.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #7d8a99; }
+.civ-app .apu-save { position: fixed; inset: 0; background: rgba(15, 30, 48, .38); z-index: 60; display: grid; place-items: center; padding: 14px; }
+.civ-app .apu-save-card { background: #fff; border-radius: 12px; box-shadow: var(--shadow); width: min(440px, 100%); max-height: 88vh; overflow: auto; padding: 18px 18px 14px; }
+.civ-app .apu-save-card h3 { margin: 0 0 3px; font-size: 13px; color: #1c2939; letter-spacing: -.02em; }
+.civ-app .apu-save-sub { font-size: 9.5px; color: #718096; margin-bottom: 6px; }
+.civ-app .apu-save-opt {
+  width: 100%; text-align: left; border: 1px solid #e1e6ed; background: #fff; border-radius: 8px;
+  padding: 11px 13px; display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; color: #344861;
+}
+.civ-app .apu-save-opt:hover { border-color: #9dbdea; background: #f6faff; }
+.civ-app .apu-save-opt.selected { border-color: #1769e0; background: #eef4fc; }
+.civ-app .apu-save-opt svg { flex: none; margin-top: 1px; color: #2462ad; }
+.civ-app .apu-save-opt strong { font-size: 11px; color: #1c2939; display: block; }
+.civ-app .apu-save-opt span { font-size: 9px; color: #718096; display: block; margin-top: 3px; line-height: 1.5; }
+.civ-app .apu-save-code { display: flex; gap: 7px; align-items: center; margin-top: 9px; }
+.civ-app .apu-save-code .field-input { height: 32px; font-size: 12px; font-family: ui-monospace, monospace; }
+.civ-app .apu-save-badge { font-size: 9px; margin-left: 2px; }
+.civ-app .apu-save-badge.ok { color: #18836b; }
+.civ-app .apu-save-badge.bad { color: #dc2626; }
+
+/* Botones destructivos (eliminar partida del catálogo) */
+.civ-app .btn.danger { background: #d33a3a; color: #fff; }
+.civ-app .btn.danger:hover { background: #c02f2f; }
+.civ-app .btn.subtle.danger { background: #fdecec; color: #c02f2f; border: 1px solid #f5c2c2; }
+.civ-app .btn.subtle.danger:hover { background: #fbdcdc; }
+
+/* Filtro "Solo mis partidas" — estado activo */
+.civ-app .filter-button.selected { background: #eef4fb; border-color: var(--blue); color: var(--blue); font-weight: 600; }
+.civ-app .filter-button.selected:hover { border-color: var(--blue); background: #e3eefb; }
