@@ -1,0 +1,588 @@
+// Prisma schema for Visor 3I replica
+// Data extracted via reverse engineering + cryptoanalysis
+
+generator client {
+  provider = "prisma-client-js"
+  // El paquete portable se construye en Linux pero corre en Windows x64:
+  // Prisma necesita el engine binario de cada plataforma de destino.
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Catálogo maestro de insumos (materiales, equipos, mano de obra)
+// Fuentes combinadas:
+//   1. INSUMOS.DAT descifrado (3.158 registros originales de 169 bytes)
+//   2. Consolidado de los PDFs de las 7 guías CIV (AnalisisMaterial/Equipo/ManoObra)
+//      -> 2.640 materiales + 429 equipos + 86 cargos únicos, con datos limpios.
+model Insumo {
+  id          Int      @id // número de registro (1..N). Los 1..3158 son del INSUMOS.DAT; los >3158 son agregados limpios.
+  codigo      String?  // código CIV / COVENIN o autogenerado (MAT-xxxxx, EQU-xxxxx, MOB-xxxx, INS-xxxx)
+  descripcion String   // descripción legible en español (puede haber duplicados)
+  unidad      String?  // KG, M, M2, M3, ML, UND, GLOBAL, saco, pieza, Kgf, rollo, %...
+  costoBs     Float?   // costo unitario histórico en Bs. (edición FEB-2011)
+  costoUsd    Float?   // costo referencial en USD (a tasa CADIVI Feb-2011: 1 USD = Bs. 4,30)
+  fecha       String?  // fecha del costo histórico (DD/MM/YYYY). Default "01/02/2011"
+  proveedor   String?  // nombre del proveedor (si conocido)
+  tipo        String?  // MATERIAL, EQUIPO, MANO_DE_OBRA, INSUMO_COMPUESTO
+  pesoKg      Float?   // peso unitario (Kg.) — extraído de la descripción cuando aplica
+  categoria   String?  // CEMENTO, CABILLA, BLOQUE, ARENA, PIEDRA, MADERA, TUBERIA, ELECTRICO, EQUIPO, MANO_DE_OBRA...
+  rawHex      String   // contenido binario descifrado en hex (para los del INSUMOS.DAT)
+  createdAt   DateTime @default(now())
+
+  // --- Campos nuevos (actualización Nov-2026) ---
+  cop                 Float?   // coeficiente de operación (solo EQUIPO). Ej. 0.01000
+  jornalBs            Float?   // jornal diario Bs. (solo MANO_DE_OBRA). Actualizado al tabulador CC vigente.
+  factorActualizacion Float?   // factor aplicado para actualizar el costo. 232,56 (USD/BCV para mat/equ) o 1,0 (tabulador MO ya vigente)
+  costoActualizadoBs  Float?   // costoBs * factorActualizacion (Bs. actuales)
+  fechaActualizacion  String?  // fecha de la actualización. Default "09/11/2026" para mat/equ; "19/08/2026" para MO
+  fuente              String?  // origen del registro: "INSUMOS.DAT", "PDF_GUIAS", "MERGE_PDF", "TABULADOR_CC_2026"
+  frecuencia          Int?     // cuántas partidas usan este insumo (de AnalisisMaterial/Equipo/ManoObra)
+  esLimpio            Boolean? @default(false) // true = descripción legible validada; false = crudo descifrado
+
+  // --- Campos del Tabulador CC vigente 19/08/2026 (solo MANO_DE_OBRA) ---
+  nivelTabulador        Int?     // nivel 1..9 del tabulador del Contrato Colectivo Construcción
+  oficioTabulador       String?  // código del oficio, ej. "1.1", "5.17", "9.2"
+  denominacionTabulador String?  // denominación oficial según acta CC (ej. "OBRERO DE 1era." vs "OBRERO DE 1ra.")
+  jornalHomologacionBs  Float?   // jornal válido desde la homologación (columna 2 del tabulador CC)
+  fechaTabulador        String?  // fecha de vigencia del tabulador aplicado. Default "19/08/2026"
+
+  @@index([descripcion])
+  @@index([categoria])
+  @@index([tipo])
+  @@index([esLimpio])
+  @@index([fuente])
+  @@index([nivelTabulador])
+}
+
+// Catálogos de partidas (7 guias + 2 guías 9000)
+model Guia {
+  id          Int      @id // 1..7 + 8=9000ED + 9=9000RM
+  nombre      String   @unique // 'Edificaciones', 'Reparaciones', etc.
+  archivoDat  String   // 'GUIA1.DAT'
+  archivoApu  String?  // 'GUIA1.APU' o NULL
+  nRegistros  Int      // número de registros en el .DAT
+  nPrecios    Int?     // número de precios en el .APU
+  descripcion String?  // descripción del contenido
+  partidas            Partida[]
+  precios             Precio[]
+  partidasAnalisis    PartidaAnalisis[]
+}
+
+// Partidas (líneas de obra) — descifradas parcialmente
+// Fuente: GUIA*.DAT descifrado (345 bytes/registro, parcialmente legible)
+model Partida {
+  id           Int      @id @default(autoincrement())
+  recordIndex  Int      // número de registro dentro del GUIA*.DAT
+  guiaId       Int
+  guia         Guia     @relation(fields: [guiaId], references: [id])
+  codigo       String?  // código CIV (parcialmente extraído)
+  descripcion  String?  // descripción (parcialmente legible)
+  unidad       String?  // unidad de medida
+  precioBs     Float?   // precio unitario (del .APU)
+  rendimiento  Float?   // rendimiento
+  rawText      String   // contenido descifrado (texto crudo)
+  rawHex       String   // contenido descifrado en hex
+  createdAt    DateTime @default(now())
+
+  @@index([guiaId])
+  @@index([descripcion])
+}
+
+// Precios unitarios (de archivos .APU — texto plano)
+// Fuente: 7 archivos GUIA*.APU (7.594 precios totales)
+model Precio {
+  id         Int      @id @default(autoincrement())
+  lineIndex  Int      // número de línea dentro del .APU
+  guiaId     Int
+  guia       Guia     @relation(fields: [guiaId], references: [id])
+  rawText    String   // texto original (ej. "1.234,56")
+  valueFloat Float    // valor parseado (ej. 1234.56)
+  createdAt  DateTime @default(now())
+
+  @@index([guiaId])
+  @@index([valueFloat])
+}
+
+// Manifiesto de instalación (226 archivos)
+// Fuente: irunin.xml (log Inno Setup)
+model InstallFile {
+  id        Int      @id
+  filename  String   @unique // ruta completa original
+  extension String   // .DAT, .APU, .PDF, .XLS, .DOC...
+  category  String   // ROOT, DOCUMENTOS, BCV, etc.
+  size      Int?     // tamaño en bytes (si conocido)
+  createdAt DateTime @default(now())
+
+  @@index([extension])
+  @@index([category])
+}
+
+// Estadísticas agregadas del análisis
+model AnalysisStat {
+  id          Int      @id @default(1)
+  insumosCount     Int
+  partidasCount    Int
+  preciosCount     Int
+  filesCount       Int
+  lastUpdated      DateTime @default(now())
+}
+
+// ============================================================
+// MODELOS DE ANÁLISIS DE PRECIOS UNITARIOS (extraídos de PDFs)
+// ============================================================
+
+// Partida con análisis completo (extraída de los PDFs Guia 1-7)
+// Cada partida = un "APU" (Análisis de Precios Unitarios) del CIV
+model PartidaAnalisis {
+  id              Int      @id @default(autoincrement())
+  covenin         String   // código COVENIN, ej. "R.910.111.110"
+  guiaId          Int      // referencia a Guia.id (1..7)
+  guia            Guia     @relation(fields: [guiaId], references: [id])
+  unidad          String   // m3.m, m2, m, kg, sac.m, global, etc.
+  cantidad        String   // "1,00 m3.m" — cantidad de análisis (siempre 1,00)
+  rendimiento     Float    // rendimiento de la partida
+  descripcion     String   // descripción completa legible
+  // Costos
+  totalMaterialesBs Float  @default(0) // Bs. totales de materiales
+  totalEquiposBs     Float  @default(0)
+  subTotalManoObraBs Float  @default(0)
+  factorCostosBs     Float  @default(0) // F.C.A.S.
+  totalManoObraFactorBs Float @default(0)
+  bonoAlimenticioBs  Float  @default(0)
+  totalBonoMasBs     Float  @default(0) // Bono + MO + Factor
+  unitarioMaterialesBs Float @default(0) // Total Materiales / Rendimiento (o Total si ya es unitario)
+  unitarioEquiposBs   Float @default(0) // Total Equipos / Rendimiento
+  unitarioManoObraBs Float  @default(0)
+  costoDirectoUnitarioBs Float @default(0)
+  // Parámetros (editable al calcular presupuesto)
+  administracionPct  Float  @default(10) // %
+  utilidadPct        Float  @default(15) // %
+  ivaPct             Float  @default(16) // %
+  fcasPct            Float  @default(180) // %
+  ceduPct            Float  @default(434.27) // % C.I.V.
+  bonoAlimenticioDiario Float @default(5407.53) // Bs. 162.226/30 días — Bono Alim. Legal y Convencional CC vigente desde homologación 2026
+  // Precios calculados
+  precioUnitarioSinIvaBs Float // Precio unitario sin IVA
+  ivaBs                Float
+  precioUnitarioBs     Float // Precio Unitario final con IVA
+  // Origen
+  paginaPdf          Int?     // página del PDF original
+  rawText            String   // texto crudo extraído del PDF (debug)
+  createdAt          DateTime @default(now())
+
+  materiales         AnalisisMaterial[]
+  equipos            AnalisisEquipo[]
+  manoObra           AnalisisManoObra[]
+  presupuestoItems   PresupuestoItem[]
+
+  @@unique([covenin])
+  @@index([guiaId])
+  @@index([descripcion])
+  @@index([unidad])
+}
+
+// Línea de materiales dentro de un análisis
+model AnalisisMaterial {
+  id              Int      @id @default(autoincrement())
+  partidaAnalisisId Int
+  partidaAnalisis PartidaAnalisis @relation(fields: [partidaAnalisisId], references: [id], onDelete: Cascade)
+  descripcion     String   // ej. "CEMENTO PORTLAND TIPO I"
+  unidad          String?  // ej. "Kgf", "Saco", "m3"
+  cantidad        Float    // ej. 350
+  costoBs         Float    // costo unitario Bs.
+  totalBs         Float    // cantidad * costoBs
+  posicion        Int      // orden dentro del análisis
+  createdAt       DateTime @default(now())
+
+  @@index([partidaAnalisisId])
+}
+
+// Línea de equipos dentro de un análisis
+model AnalisisEquipo {
+  id              Int      @id @default(autoincrement())
+  partidaAnalisisId Int
+  partidaAnalisis PartidaAnalisis @relation(fields: [partidaAnalisisId], references: [id], onDelete: Cascade)
+  descripcion     String   // ej. "PALA RECTANGULAR BELLOTA"
+  cantidad        Float    // ej. 2.00
+  cop             Float?   // coeficiente de operación (ej. 0.01000)
+  costoBs         Float    // costo unitario Bs.
+  totalBs         Float    // cantidad * cop * costoBs
+  posicion        Int
+  createdAt       DateTime @default(now())
+
+  @@index([partidaAnalisisId])
+}
+
+// Línea de mano de obra dentro de un análisis
+model AnalisisManoObra {
+  id              Int      @id @default(autoincrement())
+  partidaAnalisisId Int
+  partidaAnalisis PartidaAnalisis @relation(fields: [partidaAnalisisId], references: [id], onDelete: Cascade)
+  cargo           String   // ej. "OBRERO DE 1ra.", "CAPORAL", "OFICIAL", "AYUDANTE"
+  cantidad        Float    // ej. 12.00, 1.00, 0.25
+  jornalBs        Float    // jornal diario Bs.
+  totalBs         Float    // cantidad * jornalBs
+  posicion        Int
+  createdAt       DateTime @default(now())
+
+  @@index([partidaAnalisisId])
+}
+
+// ============================================================
+// MOTOR DE PRESUPUESTOS
+// ============================================================
+
+// Un presupuesto de obra (conjunto de partidas con cantidades)
+model Presupuesto {
+  id              Int      @id @default(autoincrement())
+  nombre          String   // ej. "Presupuesto Casa Sra. Pérez"
+  cliente         String?
+  obra            String?
+  fecha           String?  // fecha del presupuesto (DD/MM/YYYY)
+  descripcion     String?
+  // Parámetros globales del presupuesto (sobreescriben los de partida)
+  fcasPct         Float    @default(180)
+  ceduPct         Float    @default(434.27)
+  bonoAlimenticioDiario Float @default(5407.53) // Bs. 162.226/30 días — Bono Alim. Legal y Convencional CC vigente desde homologación 2026
+  administracionPct Float  @default(10)
+  utilidadPct     Float    @default(15)
+  ivaPct          Float    @default(16)
+  // Totales (calculados al guardar)
+  totalCostoDirectoBs Float  @default(0)
+  totalAdministracionBs Float @default(0)
+  totalUtilidadBs Float  @default(0)
+  totalSinIvaBs   Float  @default(0)
+  totalIvaBs      Float  @default(0)
+  totalConIvaBs   Float  @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           PresupuestoItem[]
+  computos        Computo[]
+  vanosTipo       VanoTipo[]
+  aparatos        AparatoSanitario[]
+  perfilesAcero   PerfilAcero[]
+
+  @@index([nombre])
+  @@index([cliente])
+}
+
+// Una línea del presupuesto (una partida + cantidad)
+model PresupuestoItem {
+  id              Int      @id @default(autoincrement())
+  presupuestoId   Int
+  presupuesto     Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  partidaAnalisisId Int?
+  partidaAnalisis PartidaAnalisis? @relation(fields: [partidaAnalisisId], references: [id])
+  // Snapshot de los datos (para que el presupuesto no cambie si la partida se edita)
+  covenin         String   // código de la partida
+  descripcion     String   // descripción
+  unidad          String
+  cantidad        Float    // cantidad de la partida en el presupuesto
+  rendimiento     Float?   // rendimiento de la partida
+  precioUnitarioBs Float  // precio unitario snapshot
+  totalBs         Float   // cantidad * precioUnitarioBs
+  posicion        Int      // orden en el presupuesto
+  seccion         String?  // sección del libro exportado (p.ej. "BULEVAR"); null = GENERAL
+  esPersonalizada Boolean  @default(false) // partida S/C compuesta manualmente (sin APU de la BD)
+  notas           String?
+  createdAt       DateTime @default(now())
+
+  computoBloques  ComputoBloque[]
+  materiales      ItemMaterial[]
+  equipos         ItemEquipo[]
+  manoObra        ItemManoObra[]
+
+  @@index([presupuestoId])
+  @@index([covenin])
+}
+
+// Línea de material de una partida personalizada (S/C) del presupuesto.
+// Espejo de AnalisisMaterial para composiciones creadas por el usuario.
+model ItemMaterial {
+  id          Int      @id @default(autoincrement())
+  itemId      Int
+  item        PresupuestoItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  descripcion String
+  unidad      String?
+  cantidad    Float
+  costoBs     Float    // costo unitario Bs. (BD o precio de mercado estipulado)
+  totalBs     Float    // cantidad * costoBs
+  posicion    Int      @default(0)
+
+  @@index([itemId])
+}
+
+// Línea de equipo de una partida personalizada (S/C). Espejo de AnalisisEquipo.
+model ItemEquipo {
+  id          Int      @id @default(autoincrement())
+  itemId      Int
+  item        PresupuestoItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  descripcion String
+  cantidad    Float
+  cop         Float?   // coeficiente de operación
+  costoBs     Float
+  totalBs     Float    // cantidad * cop * costoBs
+  posicion    Int      @default(0)
+
+  @@index([itemId])
+}
+
+// Línea de mano de obra de una partida personalizada (S/C). Espejo de AnalisisManoObra.
+model ItemManoObra {
+  id          Int      @id @default(autoincrement())
+  itemId      Int
+  item        PresupuestoItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  cargo       String
+  cantidad    Float    // jornadas
+  jornalBs    Float
+  totalBs     Float    // cantidad * jornalBs
+  posicion    Int      @default(0)
+
+  @@index([itemId])
+}
+
+// ============================================================
+// CÓMPUTOS MÉTRICOS — Fase 1a (contrato de diseño v1.0, A1–A8 + F1–F3)
+// La fila es la unidad de verdad y de exportación; el cómputo vive
+// dentro de un presupuesto y solo actualiza cantidades de partidas
+// existentes vía "Aplicar al presupuesto" con versión reproducible.
+// ============================================================
+
+// Cabecera del cómputo: hereda obra/fecha del presupuesto (A2).
+// Fase 1 = cómputo inicial (valuación 0) con firmas como texto configurable (A6).
+model Computo {
+  id              Int      @id @default(autoincrement())
+  presupuestoId   Int
+  presupuesto     Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  nombre          String   // ej. "Cómputo de mampostería y acabados"
+  valuacion       Int      @default(0) // 0 = cómputo inicial
+  // Firmas como texto configurable
+  medidoPor       String   @default("")
+  contratista     String   @default("")
+  inspector       String   @default("")
+  residente       String   @default("")
+  observaciones   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  bloques         ComputoBloque[]
+  versiones       ComputoVersion[]
+  elementos       ComputoElemento[]
+
+  @@index([presupuestoId])
+}
+
+// Bloque = una partida del presupuesto dentro del cómputo (A1: no crea partidas).
+// La regla de medición es atributo de la partida, no de la fila (F3 confirmado).
+model ComputoBloque {
+  id                Int      @id @default(autoincrement())
+  computoId         Int
+  computo           Computo  @relation(fields: [computoId], references: [id], onDelete: Cascade)
+  // Fase 1b: puede ser null para bloques "pendientes de catálogo" (partida que
+  // aún no existe en el presupuesto/catálogo; se marca y sigue computable)
+  presupuestoItemId Int?
+  presupuestoItem   PresupuestoItem? @relation(fields: [presupuestoItemId], references: [id])
+  // Elemento constructivo que alimenta el bloque (1 elemento → N bloques)
+  elementoId        Int?
+  elemento          ComputoElemento? @relation(fields: [elementoId], references: [id])
+  // Datos de la partida para bloques sin item (pendientes de catálogo)
+  covenin           String?
+  descripcionPendiente String?
+  unidadPendiente   String?
+  pendiente         Boolean  @default(false)
+  posicion          Int      @default(0)
+  // Cantidad neta (suma de filas con signo) y ajuste adoptado (A4)
+  cantidadNeta      Float    @default(0)
+  ajusteAdoptado    Float?   // si existe, la cantidad adoptada es esta
+  justificacion     String?  // obligatoria cuando hay ajuste adoptado
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  regla             ReglaMedicion?
+  filas             ComputoFila[]
+
+  @@index([computoId])
+  @@index([presupuestoItemId])
+  @@index([elementoId])
+}
+
+// Regla de medición por partida (1 a 1 con el bloque, heredable de plantilla en 1b).
+// Modo: paño | perimetro_longitud | lineal | volumen | peso | conteo.
+// Desperdicio (C): el cómputo mide neto; sobre_pu por defecto (F1).
+model ReglaMedicion {
+  id              Int      @id @default(autoincrement())
+  bloqueId        Int      @unique
+  bloque          ComputoBloque @relation(fields: [bloqueId], references: [id], onDelete: Cascade)
+  modo            String   @default("paño")
+  descuentaVanos  Boolean  @default(true)
+  umbralVanosM2   Float    @default(1.0) // descuenta vanos con área ≥ 1,00 m²
+  sumaRevelados   Boolean  @default(false)
+  // El factor ×caras del elemento aplica solo a acabados que revisten (friso,
+  // cerámica, pintura); la mampostería mide el muro una vez (F3/Tabla 5).
+  multiplicaCaras Boolean  @default(false)
+  // Fase 2 — modo peso: perfil del catálogo (kg/m) y, para acero de refuerzo,
+  // la separación de las barras (p.ej. 0.20 m para CB-12 @ 0,20)
+  perfilAceroId    Int?
+  separacionAceroM Float?
+  desperdicioModo String   @default("sobre_pu") // sobre_pu | en_cantidad | ambos
+  desperdicioPct  Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Fila de medición: unidad de verdad y de exportación (A3).
+// tipo cambiable en cualquier fila; signo +/−; expresión visible para auditoría.
+model ComputoFila {
+  id              Int      @id @default(autoincrement())
+  bloqueId        Int
+  bloque          ComputoBloque @relation(fields: [bloqueId], references: [id], onDelete: Cascade)
+  posicion        Int      @default(0)
+  descripcion     String   @default("")
+  tipo            String   @default("dimensiones") // dimensiones | directa
+  numero          Float    @default(1) // Nº
+  largo           Float    @default(0)
+  ancho           Float    @default(0)
+  alto            Float    @default(0)
+  valorDirecto    Float?   // cantidad directa (tipo = directa)
+  signo           String   @default("+") // + | −
+  expresion       String   @default("") // ej. "2 × 5,40 × 2,60 = 28,08"
+  cantidad        Float    @default(0) // con signo aplicado
+  // Fase 1b: origen y vínculo (la fila sigue siendo editable a mano)
+  origen          String   @default("manual") // manual | elemento | vano | plantilla
+  modo            String?  // modo efectivo usado al generar (fotografía para auditoría)
+  elementoId      Int?
+  elemento        ComputoElemento? @relation(fields: [elementoId], references: [id])
+  vanoInstanciaId Int?
+  vanoInstancia   ComputoVanoInstancia? @relation(fields: [vanoInstanciaId], references: [id])
+  vinculada       Boolean  @default(true) // false = vínculo roto, ya no se regenera
+  createdAt       DateTime @default(now())
+
+  @@index([bloqueId])
+  @@index([elementoId])
+}
+
+// Versión (snapshot inmutable) creada al aplicar al presupuesto (D):
+// garantiza que la cantidad aplicada sea reproducible aunque se siga editando.
+model ComputoVersion {
+  id              Int      @id @default(autoincrement())
+  computoId       Int
+  computo         Computo  @relation(fields: [computoId], references: [id], onDelete: Cascade)
+  numero          Int      // v1, v2, ...
+  fecha           DateTime @default(now())
+  payload         String   // JSON con bloques, filas, neta, adoptada y cantidad aplicada por partida
+
+  @@index([computoId])
+}
+
+// ============================================================
+// CÓMPUTOS — Fase 1b: elementos constructivos, vanos y bibliotecas
+// La fila sigue siendo la unidad de verdad: elementos y vanos solo
+// GENERAN o ASISTEN filas; el vínculo se puede romper y editar a mano.
+// ============================================================
+
+// Biblioteca de vanos tipo, a nivel de obra (presupuesto): una puerta
+// estándar 0,90 × 2,10 se define una vez y se instancia en N muros.
+model VanoTipo {
+  id            Int      @id @default(autoincrement())
+  presupuestoId Int
+  presupuesto   Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  nombre        String   // "Puerta metálica 0,90 × 2,10"
+  tipo          String   // puerta | ventana | celosia | ducha | aparato
+  ancho         Float
+  alto          Float
+  antepecho     Float    @default(0) // > 0 = ventana que no llega al piso
+  generaCarpinteria Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([presupuestoId])
+}
+
+// Fase 2 — catálogo de perfiles de acero y pesos de varilla (Tabla 5 del
+// contrato). presupuestoId null = catálogo general compartido por todas las obras.
+model PerfilAcero {
+  id          Int      @id @default(autoincrement())
+  presupuestoId Int?
+  presupuesto Presupuesto? @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  codigo      String   // "CB-12", "IPN-200", "ANG 2x2x1/8"
+  familia     String   // varilla | ipn | c | ang | placa | tubo | h
+  tipo        String   @default("estructural") // estructural | carpinteria | varilla
+  descripcion String   @default("")
+  pesoKgM     Float    // peso nominal kg/m
+  areaM2M     Float?   // área m2/m para pintura o carpintería
+  longitudComercial Float @default(6) // m
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([presupuestoId])
+}
+
+// Catálogo pequeño de aparatos sanitarios (proyección para deducción en cerámica)
+model AparatoSanitario {
+  id            Int      @id @default(autoincrement())
+  presupuestoId Int
+  presupuesto   Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  nombre        String   // "Sanitario", "Lavamanos", "Puerta de ducha"
+  anchoProyeccion Float
+  altoProyeccion  Float
+  unidad        String   @default("pza")
+  createdAt     DateTime @default(now())
+
+  @@index([presupuestoId])
+}
+
+// Elemento constructivo del cómputo: pieza con geometría única
+// (muro con largo × altura y espesor; losa con área y espesor; columna con sección y altura).
+// Semántica de la geometría según tipo:
+//   muro:    largo (horizontal) × alto (altura); espesor 15/20 informativo; caras 1|2
+//   losa:    largo × ancho (área); espesor para volumen
+//   columna: ancho × alto (sección) × largo (altura) → perímetro × longitud
+//   paño:    largo × alto (área)
+model ComputoElemento {
+  id          Int      @id @default(autoincrement())
+  computoId   Int
+  computo     Computo  @relation(fields: [computoId], references: [id], onDelete: Cascade)
+  tipo        String   // muro | losa | columna | paño
+  descripcion String
+  nivel       String   @default("")  // planta o sector (p.ej. "Nivel 1", "Fachada norte")
+  ambiente    String   @default("")  // habitación o paño (llave de cerámica/friso/pintura/puntos)
+  largo       Float    @default(0)
+  ancho       Float    @default(0)
+  alto        Float    @default(0)
+  espesor     Float    @default(0)
+  caras       Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vanos   ComputoVanoInstancia[]
+  bloques ComputoBloque[]
+  filas   ComputoFila[]
+
+  @@index([computoId])
+}
+
+// Vano (o aparato) instanciado en un elemento: descuenta en unas partidas
+// y genera suministro (carpintería) en otras; validación suave con override.
+model ComputoVanoInstancia {
+  id         Int      @id @default(autoincrement())
+  elementoId Int
+  elemento   ComputoElemento @relation(fields: [elementoId], references: [id], onDelete: Cascade)
+  vanoTipoId Int?     // referencia a la biblioteca si viene de allí
+  nombre     String   // "V-01"
+  tipo       String   // puerta | ventana | celosia | ducha | aparato
+  ancho      Float
+  alto       Float
+  antepecho  Float    @default(0)
+  cantidad   Int      @default(1)
+  generaCarpinteria Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  filas ComputoFila[]
+
+  @@index([elementoId])
+}
